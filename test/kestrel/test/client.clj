@@ -1,26 +1,43 @@
 (ns kestrel.test.client
   (:use
-   [clojure.test])
-  (:import
-   (net.spy.memcached MemcachedClient)
-   (java.net InetSocketAddress)))
+   [clojure.test]
+   [kestrel.client]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftest test-create-client
-  (is (= (type (MemcachedClient. (list (InetSocketAddress. "localhost" 22133))))
+  (is (= (type (#'kestrel.client/create-client))
          net.spy.memcached.MemcachedClient)))
 
-(deftest test-set-get
-  (let [mcd (MemcachedClient. (list (InetSocketAddress. "localhost" 22133)))
-        q-name "testq"]
-    (.set mcd q-name 0 "testing")
-    (is (= (.get mcd q-name) "testing"))))
+(deftest test-queue-name
+  (is (= (#'kestrel.client/decorate-queue-name "myname" nil nil nil) "myname"))
+  (is (= (#'kestrel.client/decorate-queue-name "myname" 0 nil nil) "myname/t=0"))
+  (is (= (#'kestrel.client/decorate-queue-name "myname" 1000 nil nil) "myname/t=1000"))
+  (is (= (#'kestrel.client/decorate-queue-name "myname" nil :open nil) "myname/open"))
+  (is (= (#'kestrel.client/decorate-queue-name "myname" nil :close :open) "myname/close/open"))
+  (is (= (#'kestrel.client/decorate-queue-name "myname" nil :close nil) "myname/close"))
+  (is (= (#'kestrel.client/decorate-queue-name "myname" 1000 :abort nil) "myname/t=1000/abort")))
 
-(deftest test-range
-  (let [mcd (MemcachedClient. (list (InetSocketAddress. "localhost" 22133)))
-        q-name "testq"]
-    (doseq [i (range 10)] (.set mcd q-name 0 (str i)))
-    ))
+(deftest test-delete
+  (let [q-name "testq"
+        q-val "test value"]
+    (set-item q-name q-val)
+    (delete-queue q-name)
+    (is (nil? (get-item q-name)))))
+
+(deftest test-set-get
+  (let [q-name "testq"
+        q-val "test value"]
+    (set-item q-name q-val)
+    (is (= (get-item q-name) q-val))))
+
+(deftest test-version
+  (let [v (get-version)]
+    (is (= (type (first (first v))) java.net.InetSocketAddress))
+    (is (= (type (first (rest (first v)))) String))))
+
+(deftest test-stats
+  (let [s (get-stats)]
+    (is (= (type (first (keys s))) java.net.InetSocketAddress))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
