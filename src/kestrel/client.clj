@@ -29,7 +29,7 @@
   "Adds an item to a specific queue"
   [queue-name data & {:keys [timeout] :or {timeout 0}}]
   
-  (.set (default-client) queue-name timeout data))
+  (.set (default-client) queue-name timeout (str data)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -64,8 +64,7 @@
   "drops items in a queue, leaving it empty"
   [queue-name]
 
- ;FIXME: do the goods
-  )
+ (while (get-item queue-name)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
