@@ -9,7 +9,8 @@ Wrapper for spymemcached to access kestrel as a memcached client
 (:require [kestrel.client :as kestrel])
 
 ;;create client 
-(kestrel/create-client)
+(kestrel/default-client) ;; use default settings
+(def kestrel2 (kestrel/default-client :host "127.0.0.1" :port 22133)) 
 
 ;;get version of current Kestrel 
 (kestrel/get-version)
